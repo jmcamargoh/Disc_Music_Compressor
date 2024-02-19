@@ -3,6 +3,8 @@ import multiprocessing
 from multiprocessing import Process
 from pydub import AudioSegment
 from functools import partial
+import subprocess
+import tempfile
 import time
 import os
 
@@ -30,30 +32,50 @@ def convert_file(input_file, output_folder, output_format):
     return 0
 
 # ------------------------------------------------------------------------------------------------------
+# Estimated File Size
+def estimated_size(file_w_formats):
+    input_file, format = file_w_formats
+    converted_file = f"{input_file[:-4]}.{format}"
+    
+    # Calculate the size of the converted file
+    try:
+        # Redirect ffmpeg output to a tempfile (this is just to avoid all the prompt info os ffmpeg)
+        with open(os.devnull, 'w') as null_file:
+            subprocess.run(["ffmpeg", "-i", input_file, "-f", format, converted_file], stdout=null_file, stderr=null_file)
+        # Find the estimated size
+        size = os.path.getsize(converted_file) // 1024  # Conversion to KB
+        return size
+    except Exception as e:
+        print(f"Error when estimating size: {e}")
+        return -1
+    finally:
+        # Delete tempfile
+        if os.path.exists(converted_file):
+            os.remove(converted_file)
+
+# ------------------------------------------------------------------------------------------------------
 # Single File Conversion
 def single_file(input_file, available_formats, pool_size):
-    output_folder = "Converted Files"  # Create output folder
+    file_w_formats = [(input_file, format) for format in available_formats]
 
-    # Verify if folder exists
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    # Multiprocessing to calculate faster the estimated size
+    with multiprocessing.Pool(pool_size) as pool:
+        results = pool.map(estimated_size, file_w_formats)
 
-    pool_convert = multiprocessing.Pool(pool_size)
-    convert_partial = partial(convert_file, input_file, output_folder)
-    pool_convert.map(convert_partial, available_formats)
-    pool_convert.close()
-    pool_convert.join()
-
+    estimated_sizes = dict(zip(available_formats, results)) # Zip creates tuples (in this case, the format with it's file size)
+    
+    print("Each Format Estimated File Sizes:")
+    for format, size in estimated_sizes.items():
+        print(f"{format}: {size} KB")
+    
     decision = input("Select the format to keep the file on disk: ")
 
     if decision in available_formats:
-        files = os.listdir(output_folder)
-        for file in files:
-            complete_path = os.path.join(output_folder, file)
-            if file.endswith("."+decision):
-                print("[Keeping File]")
-            else:
-                os.remove(complete_path)
+        output_folder = "Converted Single File"  # Create output folder
+        # Verify if folder exists
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        convert_file(input_file, output_folder, decision)   # Convert the single file into selected format
     else:
         print("The format isn't available")
         error_handler()
@@ -64,7 +86,7 @@ def single_file(input_file, available_formats, pool_size):
 # Folder Conversion
 def folder_processing(address, format, pool_size):
     aif_files = []
-    for file in os.listdir(address):
+    for file in os.listdir(address):    # Maybe we can improve this part to be faster!
         complete_path = os.path.join(address, file)
         if complete_path.endswith('.aif'): aif_files.append(complete_path)
 
@@ -73,7 +95,7 @@ def folder_processing(address, format, pool_size):
         error_handler()
         return 0
     
-    output_folder = "Converted Files"  # Create output folder
+    output_folder = "Converted Folder Files"  # Create output folder
 
     # Verify if folder exists
     if not os.path.exists(output_folder):
@@ -91,6 +113,7 @@ def folder_processing(address, format, pool_size):
 # Main Execution
 if __name__ == "__main__":
     print("Program Started! Welcome to Disc Music Compressor!")
+    print("Available Formats: mp3 - wav - ogg - flac")
     print("For a Single File: dmc -f FILE_PATH")
     print("For a Folder of Files: dmc -e=[FORMAT] -f FOLDER_PATH")
     selected_command = input("Enter the command for file conversion: ")
