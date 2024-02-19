@@ -6,7 +6,10 @@ from functools import partial
 import time
 import os
 
-def convert_file(audio, input_file, output_folder, output_format):
+def convert_file(input_file, output_folder, output_format):
+    # Load the file form the path
+    audio = AudioSegment.from_file(input_file, format="aiff")
+
     # Split the name of the file    
     file_name = os.path.splitext(os.path.basename(input_file))[0]
 
@@ -15,26 +18,36 @@ def convert_file(audio, input_file, output_folder, output_format):
 
     # Export the new file
     audio.export(output_path, format=output_format)
-    print(f"Converted {output_path} - Size: {os.path.getsize(output_path)/1024} KB")
+    print(f"Converted: {output_path} - Size: {os.path.getsize(output_path)/1024} KB")
     return 0
 
 # ------------------------------------------------------------------------------------------------------
 # Single File Conversion
 def single_file(input_file, available_formats, pool_size):
-    # Load the file form the path
-    audio = AudioSegment.from_file(address, format="aiff")
-
     output_folder = "Converted Files"  # Create output folder
 
     # Verify if folder exists
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    pool = multiprocessing.Pool(pool_size)
-    convert_partial = partial(convert_file, audio, input_file, output_folder)
-    pool.map(convert_partial, available_formats)
-    pool.close()
-    pool.join()
+    pool_convert = multiprocessing.Pool(pool_size)
+    convert_partial = partial(convert_file, input_file, output_folder)
+    pool_convert.map(convert_partial, available_formats)
+    pool_convert.close()
+    pool_convert.join()
+
+    decision = input("Select the format to keep the file on disk: ")
+
+    if decision in available_formats:
+        files = os.listdir(output_folder)
+        for file in files:
+            complete_path = os.path.join(output_folder, file)
+            if file.endswith("."+decision):
+                print("[Keeping File]")
+            else:
+                os.remove(complete_path)
+    else:
+        print("The format isn't available")
 
     return 0
 
@@ -47,15 +60,24 @@ def imprimir(file):
 # ------------------------------------------------------------------------------------------------------
 # Folder Conversion
 def folder_processing(address, format, pool_size):
-    aif_files = [file for file in os.listdir(address) if file.endswith(".aif")]
+    aif_files = []
+    for file in os.listdir(address):
+        complete_path = os.path.join(address, file)
+        if complete_path.endswith('.aif'): aif_files.append(complete_path)
 
     if not aif_files:
         print("Error: No AIF files were found on the folder!")
         return 0
+    
+    output_folder = "Converted Files"  # Create output folder
+
+    # Verify if folder exists
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     pool = multiprocessing.Pool(pool_size)
-    pool.map(print, aif_files)
-    # Close the pool and wait for all the tasks to complete
+    convert_partial = partial(convert_file, output_folder=output_folder, output_format=format)
+    pool.map(convert_partial, aif_files)
     pool.close()
     pool.join()
 
