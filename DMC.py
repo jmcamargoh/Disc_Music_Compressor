@@ -6,6 +6,14 @@ from functools import partial
 import time
 import os
 
+# ------------------------------------------------------------------------------------------------------
+# Error handler for incomplete processes
+def error_handler():
+    print("Process Final Status 1")
+    return 0
+
+# ------------------------------------------------------------------------------------------------------
+# Convert File Function
 def convert_file(input_file, output_folder, output_format):
     # Load the file form the path
     audio = AudioSegment.from_file(input_file, format="aiff")
@@ -48,13 +56,8 @@ def single_file(input_file, available_formats, pool_size):
                 os.remove(complete_path)
     else:
         print("The format isn't available")
+        error_handler()
 
-    return 0
-
-# ------------------------------------------------------------------------------------------------------
-# Small Test of Multiprocessing
-def imprimir(file):
-    print(file)
     return 0
 
 # ------------------------------------------------------------------------------------------------------
@@ -67,6 +70,7 @@ def folder_processing(address, format, pool_size):
 
     if not aif_files:
         print("Error: No AIF files were found on the folder!")
+        error_handler()
         return 0
     
     output_folder = "Converted Files"  # Create output folder
@@ -106,8 +110,10 @@ if __name__ == "__main__":
             end = time.perf_counter()
             execution = end-begin
             print(f"Execution time: {execution} seconds")
+            print("Process Final Status: 0")
         else:
             print("The path is incorrect!")
+            error_handler()
 
     # For a whole Folder 
     elif len(command) >= 4 and command[0]=='dmc' and '-e=' in command[1] and command[2]=='-f':
@@ -122,11 +128,15 @@ if __name__ == "__main__":
                 end = time.perf_counter()
                 execution = end-begin
                 print(f"Execution time: {execution} seconds")
+                print("Process Final Status: 0")
             else:
                 print("The path is incorrect!")
+                error_handler()
         else:
             print("The format isn't valid!")
+            error_handler()
 
     # Wrong written command
     else:
         print("Invalid command format. Please follow the provided examples for a successful conversion")
+        error_handler()
