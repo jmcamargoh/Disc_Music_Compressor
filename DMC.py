@@ -163,3 +163,17 @@ if __name__ == "__main__":
     else:
         print("Invalid command format. Please follow the provided examples for a successful conversion")
         error_handler()
+        
+        
+        
+# ------------------------------------------------------------------------------------------------------
+""""
+import multiprocessing
+
+def main():
+    pool_size = multiprocessing.cpu_count()     # Cores available in pc, to use the pool
+    print(pool_size)
+    return 0
+
+main()
+"""
