@@ -85,8 +85,8 @@ def single_file(input_file, available_formats, pool_size):
         convert_file(input_file, output_folder, decision)   # Convert the single file into selected format
         end = time.perf_counter()      # Time processing end
         execution = end-start
+        print("")
         print(f"Conversion time: {execution} seconds")
-        
     else:
         print("The format isn't available")
         error_handler()
@@ -120,6 +120,7 @@ def folder_processing(address, format, pool_size):
     pool.join()
     end = time.perf_counter()      # Time processing end
     execution = end-start
+    print("")
     print(f"Conversion time: {execution} seconds")
 
     return 0
@@ -127,6 +128,8 @@ def folder_processing(address, format, pool_size):
 # ------------------------------------------------------------------------------------------------------
 # Main Execution
 if __name__ == "__main__":
+    print("")
+
     available_format = ["mp3", "wav", "ogg", "flac"]
 
     pool_size = multiprocessing.cpu_count()     # Cores available in pc, to use the pool
@@ -136,8 +139,10 @@ if __name__ == "__main__":
         address = "".join(sys.argv[2])
         if os.path.exists(address):
             print(f"The path '{address}' is valid!")
+            print("")
             # Go to single conversion
             single_file(address, available_format, pool_size)
+            print("")
             print("Process Final Status: 0")
         else:
             print("The path is incorrect or doesn't exists!")
@@ -151,8 +156,10 @@ if __name__ == "__main__":
             if os.path.exists(address):
                 print(f"The format '{output_format}' is valid!")
                 print(f"The path '{address}' is valid!")
+                print("")
                 # Go to folder conversion
                 folder_processing(address, output_format, pool_size)
+                print("")
                 print("Process Final Status: 0")
             else:
                 print("The path is incorrect or doesn't exists!")
@@ -165,51 +172,7 @@ if __name__ == "__main__":
     else:
         print("Invalid command format. Please follow the provided examples for a successful conversion")
         error_handler()
-
-    """# For a Single File
-    if len(command) >= 3 and command[0]=='dmc' and command[1]=='-f':
-        address = command[2]
-        if os.path.exists(address):
-            print(f"The path '{address}' is valid!")
-            # Go to single conversion
-            begin = time.perf_counter()
-            single_file(address, available_format, pool_size)
-            end = time.perf_counter()
-            execution = end-begin
-            print(f"Execution time: {execution} seconds")
-            print("Process Final Status: 0")
-        else:
-            print("The path is incorrect!")
-            error_handler()
-
-    # For a whole Folder 
-    elif len(command) >= 4 and command[0]=='dmc' and '-e=' in command[1] and command[2]=='-f':
-        output_format = command[1][3:]
-        address = command[3]
-        if output_format in available_format:
-            if os.path.exists(address):
-                print(f"The path '{address}' is valid!")
-                # Go to folder conversion
-                begin = time.perf_counter()
-                folder_processing(address, output_format, pool_size)
-                end = time.perf_counter()
-                execution = end-begin
-                print(f"Execution time: {execution} seconds")
-                print("Process Final Status: 0")
-            else:
-                print("The path is incorrect!")
-                error_handler()
-        else:
-            print("The format isn't valid!")
-            error_handler()
-
-    # Wrong written command
-    else:
-        print("Invalid command format. Please follow the provided examples for a successful conversion")
-        error_handler()"""
-        
-        
-        
+     
 # ------------------------------------------------------------------------------------------------------
 """"
 import multiprocessing
