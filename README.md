@@ -1,5 +1,5 @@
 # Disc Music Compressor
-This project aims to convey the understanding of parallel processing and virtualization of memory and CPU. It consists of a converter of *.aif* files into different formats, using threads to optimize its execution time and understand the operation of the CPU when several processes run at the same time
+This project aims to convey the understanding of parallel processing and virtualization of memory and CPU. It consists of a converter of *.aif* files into different formats, using threads to optimize its execution time and understand the operation of the CPU when several processes run at the same time.
 
 ## Related Information
 - The programming language used is *Python 3.11.0*.
@@ -20,10 +20,10 @@ This project aims to convey the understanding of parallel processing and virtual
 - *sys*
 
 ## Commands
-**IMPORTANT:** Every path in the commands must be into " ", te be readen by the code.
+**IMPORTANT:** Every path in the commands must be into " ", to be readen by the code.
 
 ### For Single File Conversion
 - python DMC.py -f *"file_path"*
 
 ### For Folder Conversion
-- python DMC.py e=**FORMAT** -f *"file_path"*
+- python DMC.py -e=**FORMAT** -f *"file_path"*
