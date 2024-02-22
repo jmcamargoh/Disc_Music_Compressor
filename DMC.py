@@ -5,6 +5,7 @@ from functools import partial
 import subprocess
 import time
 import os
+import sys
 
 # ------------------------------------------------------------------------------------------------------
 # Error handler for incomplete processes
@@ -56,6 +57,7 @@ def estimated_size(file_w_formats):
 def single_file(input_file, available_formats, pool_size):
     file_w_formats = [(input_file, format) for format in available_formats]
 
+    start_estimated = time.perf_counter()    # Time processing start
     # Multiprocessing to calculate faster the estimated size
     with multiprocessing.Pool(pool_size) as pool:
         results = pool.map(estimated_size, file_w_formats)
@@ -65,6 +67,11 @@ def single_file(input_file, available_formats, pool_size):
     print("Each Format Estimated File Sizes:")
     for format, size in estimated_sizes.items():
         print(f"{format}: {size} KB")
+
+    end_estimated = time.perf_counter()      # Time processing end
+    execution_estimated = end_estimated-start_estimated
+    print(f"Estimated File Process time: {execution_estimated} seconds")
+    print("")
     
     decision = input("Select the format to keep the file on disk: ")
 
@@ -73,7 +80,13 @@ def single_file(input_file, available_formats, pool_size):
         # Verify if folder exists
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
+
+        start = time.perf_counter()    # Time processing start
         convert_file(input_file, output_folder, decision)   # Convert the single file into selected format
+        end = time.perf_counter()      # Time processing end
+        execution = end-start
+        print(f"Conversion time: {execution} seconds")
+        
     else:
         print("The format isn't available")
         error_handler()
@@ -100,27 +113,60 @@ def folder_processing(address, format, pool_size):
         os.makedirs(output_folder)
 
     pool = multiprocessing.Pool(pool_size)
+    start = time.perf_counter()    # Time processing start
     convert_partial = partial(convert_file, output_folder=output_folder, output_format=format)
     pool.map(convert_partial, aif_files)
     pool.close()
     pool.join()
+    end = time.perf_counter()      # Time processing end
+    execution = end-start
+    print(f"Conversion time: {execution} seconds")
 
     return 0
 
 # ------------------------------------------------------------------------------------------------------
 # Main Execution
 if __name__ == "__main__":
-    print("Program Started! Welcome to Disc Music Compressor!")
-    print("Available Formats: mp3 - wav - ogg - flac")
-    print("For a Single File: dmc -f FILE_PATH")
-    print("For a Folder of Files: dmc -e=[FORMAT] -f FOLDER_PATH")
-    selected_command = input("Enter the command for file conversion: ")
-    command = selected_command.split()
     available_format = ["mp3", "wav", "ogg", "flac"]
 
     pool_size = multiprocessing.cpu_count()     # Cores available in pc, to use the pool
 
     # For a Single File
+    if sys.argv[1] == '-f':
+        address = "".join(sys.argv[2])
+        if os.path.exists(address):
+            print(f"The path '{address}' is valid!")
+            # Go to single conversion
+            single_file(address, available_format, pool_size)
+            print("Process Final Status: 0")
+        else:
+            print("The path is incorrect or doesn't exists!")
+            error_handler()
+
+    # For Folder Conversion 
+    elif '-e=' in sys.argv[1] and sys.argv[2] == '-f':
+        output_format = sys.argv[1][3:]
+        address = "".join(sys.argv[3])
+        if output_format in available_format:
+            if os.path.exists(address):
+                print(f"The format '{output_format}' is valid!")
+                print(f"The path '{address}' is valid!")
+                # Go to folder conversion
+                folder_processing(address, output_format, pool_size)
+                print("Process Final Status: 0")
+            else:
+                print("The path is incorrect or doesn't exists!")
+                error_handler()
+        else:
+            print("The format isn't valid!")
+            error_handler()
+    
+    # Wrong written command
+    else:
+        print("Invalid command format. Please follow the provided examples for a successful conversion")
+        error_handler()
+
+    """# For a Single File
     if len(command) >= 3 and command[0]=='dmc' and command[1]=='-f':
         address = command[2]
         if os.path.exists(address):
@@ -160,7 +206,7 @@ if __name__ == "__main__":
     # Wrong written command
     else:
         print("Invalid command format. Please follow the provided examples for a successful conversion")
-        error_handler()
+        error_handler()"""
         
         
         
