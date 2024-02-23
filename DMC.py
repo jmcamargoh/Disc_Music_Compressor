@@ -183,4 +183,8 @@ def main():
     return 0
 
 main()
+
+
+python DMC.py -f "Convertir/14 The Dove Comes.aif"
+python DMC.py -e=ogg -f "Convertir"
 """
